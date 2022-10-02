@@ -1,52 +1,40 @@
 
-import java.util.Objects;
-
-
 public class TestMethods {
-
+    private Task task;
 
     @Before
         //проверяет, что класс работает
     void setUp() {
-        Task task=new Task();
-        Task.task(3,4,5);
-
+        task=new Task();
+        if (task==null) {
+    throw new NullPointerException("Task не существует");
+        }
     }
     @Test()
         //проверяет, что рассчитывает верно
     void assertThat() {
 
-        try{
-            double b=5,c=3, a=8;
-            double result = 121;
-            Task task=new Task();
-            Objects.equals(result, Task.task(a, b, c));
 
-        } catch(Throwable ex)
-        {
-            System.out.println(ex.getCause());
-        }
-
+            double result = -71;
+            final var taskresult = Task.task(8, 5, 3);
+            if (result!=taskresult){
+                throw new AssertionError("Дикриминант посчитан неверно");//ошибка нарушения утверждения
+            }
 
     }
     //заведомо провальный тест
     @Test()
     void assertThat2() {
-        try {
-            double b=2,c=3, a=8;
-
-            double result = 100;
-            Task task2=new Task();
-            result=Task.task2(a,b,c);
-            Objects.equals(result, Task.task2(a, b, c));}
-        catch(Throwable ex)
-        {
-            System.out.println(ex.getCause());
+        double result = -71;
+        final var taskresult = Task.task2(8, 5, 3);
+        if (result!=taskresult){
+            throw new AssertionError("Дикриминант посчитан неверно");//ошибка нарушения утверждения
         }
     }
     @After
         //выводит информацию об завершении
     void results() {
+        task = null;
         System.out.println("Завершено");
 
     }
