@@ -12,72 +12,92 @@ import java.util.Enumeration;
 import java.util.List;
 
 public class ForTestTest {
-    static Class<?> testmethods=null;
+    static Class<?> testmethods = null;
     static List<Class> classes = null;
 
     int fail = 0;
     int all = 0;
     int success = 0;
+    static String task = null;
+    static String task2 = null;
 
     public static void main(String[] args) throws Exception {
 //Рефлекция, изучаем классы и методы отмеченные аннотациями
-    allClasses("otus");
-        TestA testing = new TestA();
-        testing.info();
-        testing.displayInfo();
+        allClasses("otus");
+
+        //displayInfo();
+        ClassInterface classInterface = Demo.newClass();
+        task = classInterface.task(8, 5, 3);
+        task2 = classInterface.task2(4, 5, 7);
+
     }
 
 
-    public static void before (ForTestTest forTestTest) {
+    public static void before(ForTestTest forTestTest, Object o,Method methods) {
+        for (Class clazz : ForTestTest.classes) {
 
-        for (Method method : forTestTest.testmethods.getDeclaredMethods()){
-            Annotation annotation = method.getAnnotation(Before.class);
-            Before before = (Before) annotation;
-            if (before!=null){
-                forTestTest.all++;
-                try{
-                    method.invoke(forTestTest.testmethods.getDeclaredConstructor().newInstance());
-                    forTestTest.success++;
-                    test(forTestTest);
-                } catch(Throwable ex)
-                {
-                    System.out.println(ex.getCause());
-                    forTestTest.fail++;
+            ForTestTest.testmethods = clazz;
+            for (Method method : forTestTest.testmethods.getDeclaredMethods()) {
+                Annotation annotation = method.getAnnotation(Before.class);
+                Before before = (Before) annotation;
+                if (before != null) {
+
+                    try {
+                        method.invoke(forTestTest.testmethods.getDeclaredConstructor().newInstance(),o);
+
+                        test(forTestTest, o, methods);
+                    } catch (Throwable ex) {
+                        System.out.println(ex.getCause());
+                        System.out.println("Не пройден тест " + method);
+                        forTestTest.fail++;
+                        return;
+
+                    }
                 }
             }
         }
     }
-    private static void test(ForTestTest forTestTest){
-        for (Method method : forTestTest.testmethods.getDeclaredMethods()){
+
+    private static void test(ForTestTest forTestTest, Object o, Method method) {
+       // for (Method method : forTestTest.testmethods.getDeclaredMethods()) {
             Annotation annotation = method.getAnnotation(Test.class);
             Test test = (Test) annotation;
-            if (test!=null){
-                forTestTest.all++;
-                try{
-                    method.invoke(forTestTest.testmethods.getDeclaredConstructor().newInstance());
-                    forTestTest.success++;
-                } catch(Throwable ex)
-                {
+            if (test != null) {
+
+                try {
+                    method.invoke(forTestTest.testmethods.getDeclaredConstructor().newInstance(), o);
+                    int fail = 0;
+                    after(forTestTest, fail);
+
+                } catch (Throwable ex) {
                     System.out.println(ex.getCause());
-                    forTestTest.fail++;
+                    int fail = 1;
+                    System.out.println("Не пройден тест " + method);
+                    after(forTestTest, fail);
+
                 }
             }
-        }
+       // }
     }
-    public static void after(ForTestTest forTestTest){
 
-        for (Method method : forTestTest.testmethods.getDeclaredMethods()){
+    public static void after(ForTestTest forTestTest, int fail) {
+
+        for (Method method : forTestTest.testmethods.getDeclaredMethods()) {
             Annotation annotation = method.getAnnotation(After.class);
             After after = (After) annotation;
-            if (after!=null){
-                forTestTest.all++;
-                try{
+            if (after != null) {
+
+                try {
                     method.invoke(forTestTest.testmethods.getDeclaredConstructor().newInstance());
-                    forTestTest.success++;
-                } catch(Throwable ex)
-                {
+                    if (fail == 0) {
+                        forTestTest.success++;
+                    } else {
+                        forTestTest.fail++;
+                    }
+                } catch (Throwable ex) {
                     System.out.println(ex.getCause());
                     forTestTest.fail++;
+                    System.out.println("Не пройден тест " + method);
                 }
             }
         }
@@ -118,10 +138,8 @@ public class ForTestTest {
         return classes;
     }
 
-}
-class TestA{
-    ForTestTest forTestTest = new ForTestTest();
-    void info(){
+
+ void info(ForTestTest forTestTest, Object o){
         for (Class clazz : ForTestTest.classes) {
 
             ForTestTest.testmethods = clazz;
@@ -130,15 +148,14 @@ class TestA{
                 Annotation annotation = method.getAnnotation(Test.class);
                 Test test = (Test) annotation;
                 if (test != null) {
-
-                    ForTestTest.before(forTestTest);
-                    ForTestTest.after(forTestTest);
-
+                    forTestTest.all++;
+                    ForTestTest.before(forTestTest,o,method);
                 }
             }
         }}
-    void displayInfo(){
-        System.out.println("Результаты тестирования ");
+    void displayInfo(ForTestTest forTestTest, Method o){
+
+        System.out.println("Результаты тестирования метода " + o);
         System.out.println("Всего было тестов " + forTestTest.all);
         System.out.println("Успешных тестов " + forTestTest.success);
         System.out.println("Количество упавшивших тестов " + forTestTest.fail);}
